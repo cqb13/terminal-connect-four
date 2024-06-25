@@ -13,6 +13,7 @@ pub enum GameMode {
     Multiplayer,
 }
 
+#[derive(Debug)]
 pub enum Player {
     PlayerOne,
     PlayerTwo,
@@ -111,7 +112,7 @@ impl GameState {
             return Err("Column does not exist on boar".to_string());
         }
 
-        if self.game_board[0][column as usize] != Piece::None {
+        if self.game_board[0][column as usize - 1] != Piece::None {
             return Err("The selected column is full".to_string());
         }
 
@@ -141,6 +142,90 @@ impl GameState {
         };
 
         self.current_player = opposite_player
+    }
+
+    pub fn are_four_connected(&self) -> Option<Player> {
+        // check horizontal
+        for row in 0..self.height {
+            for col in 0..self.width - 3 {
+                if self.game_board[row as usize][col as usize] != Piece::None
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize][col as usize + 1]
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize][col as usize + 2]
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize][col as usize + 3]
+                {
+                    return Some(match self.game_board[row as usize][col as usize] {
+                        Piece::Red => Player::PlayerOne,
+                        Piece::Yellow => Player::PlayerTwo,
+                        _ => panic!("Invalid piece"),
+                    });
+                }
+            }
+        }
+
+        // check vertical
+        for row in 0..self.height - 3 {
+            for col in 0..self.width {
+                if self.game_board[row as usize][col as usize] != Piece::None
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize + 1][col as usize]
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize + 2][col as usize]
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize + 3][col as usize]
+                {
+                    return Some(match self.game_board[row as usize][col as usize] {
+                        Piece::Red => Player::PlayerOne,
+                        Piece::Yellow => Player::PlayerTwo,
+                        _ => panic!("Invalid piece"),
+                    });
+                }
+            }
+        }
+
+        // check diagonal
+        for row in 0..self.height - 3 {
+            for col in 0..self.width - 3 {
+                if self.game_board[row as usize][col as usize] != Piece::None
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize + 1][col as usize + 1]
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize + 2][col as usize + 2]
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize + 3][col as usize + 3]
+                {
+                    return Some(match self.game_board[row as usize][col as usize] {
+                        Piece::Red => Player::PlayerOne,
+                        Piece::Yellow => Player::PlayerTwo,
+                        _ => panic!("Invalid piece"),
+                    });
+                }
+            }
+        }
+
+        // check diagonal
+        for row in 0..self.height - 3 {
+            for col in 3..self.width {
+                if self.game_board[row as usize][col as usize] != Piece::None
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize + 1][col as usize - 1]
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize + 2][col as usize - 2]
+                    && self.game_board[row as usize][col as usize]
+                        == self.game_board[row as usize + 3][col as usize - 3]
+                {
+                    return Some(match self.game_board[row as usize][col as usize] {
+                        Piece::Red => Player::PlayerOne,
+                        Piece::Yellow => Player::PlayerTwo,
+                        _ => panic!("Invalid piece"),
+                    });
+                }
+            }
+        }
+
+        None
     }
 
     pub fn debug(&self) {
