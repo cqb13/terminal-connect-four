@@ -9,7 +9,7 @@ pub fn play_multiplayer() -> GameResult {
     let mut game_state = GameState::new(GameMode::Multiplayer);
     let possible_moves = game_state.height * game_state.width;
 
-    while game_state.turns < possible_moves {
+    while game_state.moves < possible_moves {
         let mut current_column = 4;
         loop {
             game_state.draw_board_with_marker(current_column);
@@ -44,12 +44,9 @@ pub fn play_multiplayer() -> GameResult {
                         terminal::disable_raw_mode().expect("Failed to disable raw mode");
                         let result = game_state.drop_piece_in_column(current_column);
 
-                        match result {
-                            Ok(_) => {
-                                refresh_display(15);
-                                break;
-                            }
-                            Err(_) => {}
+                        if result == true {
+                            refresh_display(15);
+                            break;
                         }
                     }
                     _ => {}
@@ -65,7 +62,7 @@ pub fn play_multiplayer() -> GameResult {
         match winner {
             Some(winner) => {
                 game_state.draw_board();
-                return GameResult::new(game_state.turns, Some(winner));
+                return GameResult::new(game_state.moves, Some(winner));
             }
             None => {}
         }
@@ -74,5 +71,5 @@ pub fn play_multiplayer() -> GameResult {
     }
 
     game_state.draw_board();
-    GameResult::new(game_state.turns, None)
+    GameResult::new(game_state.moves, None)
 }

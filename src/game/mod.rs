@@ -13,7 +13,7 @@ pub enum GameMode {
     Multiplayer,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Player {
     PlayerOne,
     PlayerTwo,
@@ -87,7 +87,7 @@ impl PartialEq for Piece {
 
 pub struct GameState {
     current_player: Player,
-    turns: i32,
+    moves: i32,
     game_mode: GameMode,
     game_board: Vec<Vec<Piece>>,
     width: i32,
@@ -101,7 +101,7 @@ impl GameState {
 
         GameState {
             current_player: Player::PlayerOne,
-            turns: 0,
+            moves: 0,
             game_mode,
             game_board,
             width: GAME_BOARD_WIDTH,
@@ -109,13 +109,21 @@ impl GameState {
         }
     }
 
-    pub fn drop_piece_in_column(&mut self, column: i32) -> Result<(), String> {
+    pub fn valid_column(&self, column: i32) -> bool {
         if column > self.width || column < 1 {
-            return Err("Column does not exist on boar".to_string());
+            return false;
         }
 
         if self.game_board[0][column as usize - 1] != Piece::None {
-            return Err("The selected column is full".to_string());
+            return false;
+        }
+
+        true
+    }
+
+    pub fn drop_piece_in_column(&mut self, column: i32) -> bool {
+        if !self.valid_column(column) {
+            return false;
         }
 
         // finds the first open spot on the column
@@ -123,8 +131,8 @@ impl GameState {
             if self.game_board[row as usize][column as usize - 1] != Piece::None {
                 self.game_board[row as usize - 1][column as usize - 1] =
                     self.current_player.color();
-                self.turns += 1;
-                return Ok(());
+                self.moves += 1;
+                return true;
             }
         }
 
@@ -132,9 +140,9 @@ impl GameState {
         self.game_board[self.height as usize - 1][column as usize - 1] =
             self.current_player.color();
 
-        self.turns += 1;
+        self.moves += 1;
 
-        Ok(())
+        true
     }
 
     pub fn switch_player(&mut self) {
@@ -309,13 +317,13 @@ impl GameState {
 }
 
 pub struct GameResult {
-    turns: i32,
+    moves: i32,
     winner: Option<Player>,
 }
 
 impl GameResult {
-    pub fn new(turns: i32, winner: Option<Player>) -> GameResult {
-        GameResult { turns, winner }
+    pub fn new(moves: i32, winner: Option<Player>) -> GameResult {
+        GameResult { moves, winner }
     }
 
     pub fn display(&self) {
@@ -323,13 +331,13 @@ impl GameResult {
         match &self.winner {
             Some(winner) => {
                 println!(
-                    "{} won the game after {} turns!",
+                    "{} won the game after {} moves!",
                     winner.to_string(),
-                    self.turns
+                    self.moves
                 )
             }
             None => {
-                println!("The game ended in a draw after {} turns.", self.turns)
+                println!("The game ended in a draw after {} moves.", self.moves)
             }
         }
     }
