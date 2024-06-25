@@ -87,6 +87,7 @@ impl PartialEq for Piece {
 
 pub struct GameState {
     current_player: Player,
+    turns: i32,
     game_mode: GameMode,
     game_board: Vec<Vec<Piece>>,
     width: i32,
@@ -100,6 +101,7 @@ impl GameState {
 
         GameState {
             current_player: Player::PlayerOne,
+            turns: 0,
             game_mode,
             game_board,
             width: GAME_BOARD_WIDTH,
@@ -121,6 +123,7 @@ impl GameState {
             if self.game_board[row as usize][column as usize - 1] != Piece::None {
                 self.game_board[row as usize - 1][column as usize - 1] =
                     self.current_player.color();
+                self.turns += 1;
                 return Ok(());
             }
         }
@@ -128,6 +131,8 @@ impl GameState {
         // the row is empty, place piece at bottom
         self.game_board[self.height as usize - 1][column as usize - 1] =
             self.current_player.color();
+
+        self.turns += 1;
 
         Ok(())
     }
@@ -237,6 +242,45 @@ impl GameState {
         }
     }
 
+    pub fn draw_board_with_marker(&self, column: i32) {
+        for i in 1..=self.width {
+            if i == column {
+                print!(
+                    "  {}{}{}  ",
+                    self.current_player.color().ansi_color(),
+                    self.current_player.color().to_symbol(),
+                    Color::Clear.to_ansi_color_code()
+                );
+            } else {
+                print!("    ");
+            }
+        }
+        println!();
+        for row in &self.game_board {
+            print!("+");
+            for _ in 0..self.width {
+                print!("---+");
+            }
+            println!();
+            print!("|");
+            for piece in row {
+                print!(
+                    " {}{}{} |",
+                    piece.ansi_color(),
+                    piece.to_symbol(),
+                    Color::Clear.to_ansi_color_code()
+                );
+            }
+            println!();
+        }
+        print!("+");
+        for _ in 0..self.width {
+            print!("---+");
+        }
+        println!();
+        println!("Player: {}", self.current_player.to_string());
+    }
+
     pub fn draw_board(&self) {
         for row in &self.game_board {
             print!("+");
@@ -260,6 +304,7 @@ impl GameState {
             print!("---+");
         }
         println!();
+        println!("Player: {}", self.current_player.to_string());
     }
 }
 
@@ -269,11 +314,8 @@ pub struct GameResult {
 }
 
 impl GameResult {
-    pub fn new() -> GameResult {
-        GameResult {
-            turns: 0,
-            winner: None,
-        }
+    pub fn new(turns: i32, winner: Option<Player>) -> GameResult {
+        GameResult { turns, winner }
     }
 
     pub fn display(&self) {
